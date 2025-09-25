@@ -95,7 +95,8 @@ jobs:
             body += "These are all the screenshots generated during this workflow:\n\n";
 
             for (const file of screenshots) {
-              body += `![](${pageUrl}/${file})\n\n`;
+              body += `**${file}**\n\n`; // mostra o nome do arquivo
+              body += `![](${pageUrl}/${file})\n\n`; // mostra a imagem
             }
 
             await github.rest.issues.createComment({
