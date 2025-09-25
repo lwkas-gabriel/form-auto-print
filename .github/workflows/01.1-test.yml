@@ -3,6 +3,7 @@ name: PR Deploy Comment
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
   comment-landing-url:
@@ -13,6 +14,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            if (!github.event.pull_request) {
+              console.log("No pull request found in this event. Skipping comment.");
+              return;
+            }
             const prNumber = github.event.pull_request.number;
             const url = "https://main-sd-preprod.dev.essr.ch/";
             const commentBody = `🚀 This pull request has been deployed to:\n\n🔗 ${url}`;
