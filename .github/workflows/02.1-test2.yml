@@ -41,38 +41,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Get last PR comment with landing page URL
-        id: get_url
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            let prNumber;
-            if (context.payload.pull_request) {
-              prNumber = context.payload.pull_request.number;
-            } else if (context.payload.workflow_run) {
-              prNumber = context.payload.workflow_run.pull_requests[0]?.number;
-            }
-            if (!prNumber) {
-              core.setFailed("PR number not found in this context.");
-              return;
-            }
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber
-            });
-            const lastComment = comments.data.reverse().find(c => /https?:\/\/\S+/.test(c.body));
-            const urlMatch = lastComment?.body.match(/https?:\/\/\S+/);
-            return urlMatch ? urlMatch[0] : null;
-          result-encoding: string
-
       - name: Run screenshots
         id: run_screenshots
-        env:
-          BASE_URL: ${{ github.event.inputs.url || steps.get_url.outputs.result }}
         run: |
-          FULL_URL="${BASE_URL%/}/formation/formation-secretaire-medicale-ppc"
+          FULL_URL="https://main-sd-preprod.dev.essr.ch/formation/formation-secretaire-medicale-ppc"
           echo "Using URL: $FULL_URL"
           export URL="$FULL_URL"
           node screenshot.js
