@@ -11,7 +11,7 @@ const iframeSelector = "#lead-redirect-iframe";
 const formSelector = "app-form form";
 
 const viewports = [
-  //{ width: 800, height: 1280 },  
+  { width: 800, height: 1280 },  
   { width: 412, height: 915 },   
   { width: 1536, height: 864 },  
   { width: 1920, height: 1080 }, 
