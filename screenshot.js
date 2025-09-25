@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const url = process.env.URL || "https://main-sd-preprod.dev.essr.ch/formation/formation-secretaire-medicale-ppc";
 
-console.log("Using URL:", url);
+//console.log("Using URL:", url);
 
 const modalButtonSelector = "#main-cta";
 const modalSelector = ".popup__modal";
