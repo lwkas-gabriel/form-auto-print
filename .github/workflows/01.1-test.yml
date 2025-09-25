@@ -1,14 +1,13 @@
 name: PR Deploy Comment
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 jobs:
   comment-landing-url:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Comment on PR with landing page URL
         uses: actions/github-script@v7
