@@ -11,12 +11,34 @@ const iframeSelector = "#lead-redirect-iframe";
 const formSelector = "app-form form";
 
 const viewports = [
-  { width: 800, height: 1280 },  
-  { width: 412, height: 915 },   
-  { width: 1536, height: 864 },  
-  { width: 1920, height: 1080 }, 
-  { width: 2560, height: 1440 },
+  // Tablet
+  { width: 800, height: 1280 }, // Android tablets 7–10"
+  { width: 1024, height: 600 }, // Small/older tablets (7")
+  { width: 1024, height: 768 }, // Classic iPad
+
+  // Smartphones
+  { width: 320, height: 568 }, // Older iPhones (5/SE)
+  { width: 360, height: 640 }, // Standard mid-range Android
+  { width: 360, height: 800 }, // Recent Androids
+  { width: 375, height: 667 }, // iPhone 6/7/8
+  { width: 375, height: 812 }, // iPhone X / XS / 11 Pro
+  { width: 390, height: 844 }, // iPhone 12/13/14
+  { width: 412, height: 915 }, // Large Androids (Note, OnePlus, Xiaomi)
+  { width: 414, height: 896 }, // iPhone XR / XS Max / 11 / 11 Pro Max
+  { width: 430, height: 932 }, // iPhone 14 Pro Max / 15 Pro Max
+
+  // Notebook
+  { width: 1280, height: 800 }, // Older 13" MacBook / Dell/HP
+  { width: 1366, height: 768 }, // Standard notebooks
+  { width: 1440, height: 900 }, // MacBook Air 13", some Lenovo/HP
+  { width: 1536, height: 864 }, // Mid-range Windows 10/11
+  { width: 1600, height: 900 }, // 15" notebooks
+
+  // Desktop
+  { width: 1920, height: 1080 }, // Full HD
+  { width: 2560, height: 1440 }, // 2K / QHD
 ];
+
 
 const browsers = [
   { name: "chromium", instance: chromium },
