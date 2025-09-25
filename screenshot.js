@@ -1,7 +1,7 @@
 const { chromium, firefox, webkit } = require('playwright');
 const fs = require('fs');
 
-const url = process.env.URL || "https://localhost.schooldrive.ch:50001/formation/formation-secretaire-medicale-ppc";
+const url = process.env.URL || "https://main-sd-preprod.dev.essr.ch/formation/formation-secretaire-medicale-ppc";
 
 console.log("Using URL:", url);
 
@@ -12,7 +12,7 @@ const formSelector = "app-form form";
 
 const viewports = [
   { width: 800, height: 1280 },  
-  //{ width: 412, height: 915 },   
+  { width: 412, height: 915 },   
   { width: 1536, height: 864 },  
   { width: 1920, height: 1080 }, 
   { width: 2560, height: 1440 },
