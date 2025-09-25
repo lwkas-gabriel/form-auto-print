@@ -1,9 +1,8 @@
-name: PR Deploy Comment
+name: 1.1 PR Deploy Comment
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  workflow_dispatch:
 
 jobs:
   comment-landing-url:
