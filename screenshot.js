@@ -1,7 +1,7 @@
 const { chromium, firefox, webkit } = require('playwright');
 const fs = require('fs');
 
-const url = process.env.URL || "https://localhost.schooldrive.ch:50001/formation/formation-secretaire-medicale-ppc";
+const url = process.env.URL || "https://main-sd-preprod.dev.essr.ch/formation/formation-secretaire-medicale-ppc";
 
 console.log("Using URL:", url);
 
