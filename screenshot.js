@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const url = process.env.URL || "https://main-sd-preprod.dev.essr.ch/formation/formation-secretaire-medicale-ppc";
 
-console.log("Using URL:", url);
+//console.log("Using URL:", url);
 
 const modalButtonSelector = "#main-cta";
 const modalSelector = ".popup__modal";
@@ -16,6 +16,7 @@ const viewports = [
   { width: 1536, height: 864 },  
   { width: 1920, height: 1080 }, 
   { width: 2560, height: 1440 },
+  //wololo
 ];
 
 const browsers = [
