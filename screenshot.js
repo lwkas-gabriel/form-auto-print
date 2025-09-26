@@ -37,6 +37,7 @@ const viewports = [
   // Desktop
   { width: 1920, height: 1080 }, // Full HD
   { width: 2560, height: 1440 }, // 2K / QHD
+  
 ];
 
 
