@@ -1,15 +1,7 @@
 name: 1.2 Landing Page Form Screenshots
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
-    branches: [main]  # Apenas PRs cujo target é main
-  workflow_run:
-    workflows:
-      - "1️⃣ Staging Deploy"
-      - "1.1 Fork Deploy Stub"
-    types:
-      - completed
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -51,9 +43,15 @@ jobs:
           node screenshot.js
           echo "screenshots_list=$(ls screenshots/*.png | xargs -n1 basename | paste -sd, -)" >> $GITHUB_OUTPUT
 
-      - name: Upload screenshots as Pages artifact
+      - name: Upload screenshots to Pages
         uses: actions/upload-pages-artifact@v3
         with:
+          path: ./screenshots
+
+      - name: Upload screenshots as ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-zip
           path: ./screenshots
 
   deploy:
@@ -68,16 +66,15 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  comment:
+  comment-pages:
     runs-on: ubuntu-latest
     needs: [deploy, screenshots]
     steps:
-      - name: Comment screenshots on PR
+      - name: Comment screenshots via Pages
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // Determina o PR corretamente mesmo em workflow_run
             let prNumber;
             if (context.payload.pull_request) {
               prNumber = context.payload.pull_request.number;
@@ -87,21 +84,42 @@ jobs:
               console.log("No PR found. Skipping comment.");
               return;
             }
-
             const screenshots = '${{ needs.screenshots.outputs.screenshots_list }}'.split(",");
             const pageUrl = '${{ needs.deploy.outputs.page_url }}'.replace(/\/$/, "");
-
-            let body = "🖼 **Form Screenshots**\n\n";
-            body += "These are all the screenshots generated during this workflow:\n\n";
-
+            let body = "🖼 **Form Screenshots via Pages**\n\n";
             for (const file of screenshots) {
-              body += `**${file}**\n\n`; // mostra o nome do arquivo
-              body += `![](${pageUrl}/${file})\n\n`; // mostra a imagem
+              body += `**${file}**\n\n`;
+              body += `![](${pageUrl}/${file})\n\n`;
             }
-
             await github.rest.issues.createComment({
-              owner: context.payload.repository.owner.login,
-              repo: context.payload.repository.name,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body
+            });
+
+  comment-artifact:
+    runs-on: ubuntu-latest
+    needs: screenshots
+    steps:
+      - name: Comment with artifact link
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let prNumber;
+            if (context.payload.pull_request) {
+              prNumber = context.payload.pull_request.number;
+            } else if (context.payload.workflow_run && context.payload.workflow_run.pull_requests.length > 0) {
+              prNumber = context.payload.workflow_run.pull_requests[0].number;
+            } else {
+              console.log("No PR found. Skipping comment.");
+              return;
+            }
+            const body = `📦 **Screenshots available as artifact ZIP**\n\n👉 [Download ZIP](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}?check_suite_focus=true)`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
               issue_number: prNumber,
               body
             });
