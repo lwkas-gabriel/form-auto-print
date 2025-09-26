@@ -3,7 +3,7 @@ name: 1.2 Landing Page Form Screenshots
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
-    branches: [main]  # Apenas PRs cujo target é main
+    branches: [main]
   workflow_run:
     workflows:
       - "1️⃣ Staging Deploy"
@@ -51,10 +51,88 @@ jobs:
           node screenshot.js
           echo "screenshots_list=$(ls screenshots/*.png | xargs -n1 basename | paste -sd, -)" >> $GITHUB_OUTPUT
 
-      - name: Upload screenshots as Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload screenshots as artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: screenshots
           path: ./screenshots
+
+  comment-artifact:
+    runs-on: ubuntu-latest
+    needs: screenshots
+    steps:
+      - name: Comment with artifact link
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          let prNumber;
+          if (context.payload.pull_request) {
+            prNumber = context.payload.pull_request.number;
+          } else if (context.payload.workflow_run && context.payload.workflow_run.pull_requests.length > 0) {
+            prNumber = context.payload.workflow_run.pull_requests[0].number;
+          } else {
+            console.log("No PR found. Skipping comment.");
+            return;
+          }
+
+          const body = `📦 **Screenshots available as artifact**\n\n👉 [Download screenshots](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            body
+          });
+
+  comment-base64:
+    runs-on: ubuntu-latest
+    needs: screenshots
+    steps:
+      - name: Download screenshots
+        uses: actions/download-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots
+
+      - name: Build Base64 comment
+        id: build_base64
+        run: |
+          echo "BODY<<EOF" >> $GITHUB_ENV
+          echo "🧾 **Form Screenshots (Base64 inline)**" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          for file in screenshots/*.png; do
+            fname=$(basename "$file")
+            b64=$(base64 -w0 "$file")
+            echo "**$fname**" >> $GITHUB_ENV
+            echo "![](data:image/png;base64,$b64)" >> $GITHUB_ENV
+            echo "" >> $GITHUB_ENV
+          done
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Comment Base64 screenshots
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          BODY: ${{ env.BODY }}
+        script: |
+          let prNumber;
+          if (context.payload.pull_request) {
+            prNumber = context.payload.pull_request.number;
+          } else if (context.payload.workflow_run && context.payload.workflow_run.pull_requests.length > 0) {
+            prNumber = context.payload.workflow_run.pull_requests[0].number;
+          } else {
+            console.log("No PR found. Skipping comment.");
+            return;
+          }
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            body: process.env.BODY
+          });
 
   deploy:
     runs-on: ubuntu-latest
@@ -68,40 +146,37 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  comment:
+  comment-pages:
     runs-on: ubuntu-latest
     needs: [deploy, screenshots]
     steps:
-      - name: Comment screenshots on PR
+      - name: Comment screenshots via Pages
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // Determina o PR corretamente mesmo em workflow_run
-            let prNumber;
-            if (context.payload.pull_request) {
-              prNumber = context.payload.pull_request.number;
-            } else if (context.payload.workflow_run && context.payload.workflow_run.pull_requests.length > 0) {
-              prNumber = context.payload.workflow_run.pull_requests[0].number;
-            } else {
-              console.log("No PR found. Skipping comment.");
-              return;
-            }
+        script: |
+          let prNumber;
+          if (context.payload.pull_request) {
+            prNumber = context.payload.pull_request.number;
+          } else if (context.payload.workflow_run && context.payload.workflow_run.pull_requests.length > 0) {
+            prNumber = context.payload.workflow_run.pull_requests[0].number;
+          } else {
+            console.log("No PR found. Skipping comment.");
+            return;
+          }
 
-            const screenshots = '${{ needs.screenshots.outputs.screenshots_list }}'.split(",");
-            const pageUrl = '${{ needs.deploy.outputs.page_url }}'.replace(/\/$/, "");
+          const screenshots = '${{ needs.screenshots.outputs.screenshots_list }}'.split(",");
+          const pageUrl = '${{ needs.deploy.outputs.page_url }}'.replace(/\/$/, "");
 
-            let body = "🖼 **Form Screenshots**\n\n";
-            body += "These are all the screenshots generated during this workflow:\n\n";
+          let body = "🔗 **Screenshots via Pages**\n\n";
+          for (const file of screenshots) {
+            body += `**${file}**\n\n`;
+            body += `![](${pageUrl}/${file})\n\n`;
+          }
 
-            for (const file of screenshots) {
-              body += `**${file}**\n\n`; // mostra o nome do arquivo
-              body += `![](${pageUrl}/${file})\n\n`; // mostra a imagem
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.payload.repository.owner.login,
-              repo: context.payload.repository.name,
-              issue_number: prNumber,
-              body
-            });
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            body
+          });
